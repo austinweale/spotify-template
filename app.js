@@ -29,3 +29,59 @@ var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
 $('body').tooltip({
     selector: '[title]'
 });
+
+window.onload = function(){
+  $('#search').submit(function(){
+        getLocation()
+    });
+}
+
+function getCoordinates(city, country){
+  /*console.log("https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs");
+  var ajax = new XMLHttpRequest();
+  ajax.onload = displayCoordinates();
+  ajax.open("GET", "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs", true);
+  ajax.send();*/
+  $.ajax({
+   url : "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs",
+   data : { param : "value" },
+   dataType : 'text',
+   type : 'get',
+   success : function(text) {
+   // called after the ajax has returned successful response
+   displayCoordinates(text); // alerts the response
+ }
+});
+}
+
+function displayCoordinates(text){
+  console.log(text);
+  var json = JSON.parse(text);
+
+  var lat = json.results[0].geometry.location.lat;
+  var lng = json.results[0].geometry.location.lng;
+  console.log(lat + " " + lng);
+
+  $("#location").append("<br>lattitude: " + lat + "<br>" + "longitude: " + lng);
+}
+
+function getLocation(){
+  var search = $("#input").val();
+  console.log(search);
+  var ajax = new XMLHttpRequest();
+  ajax.onload = display;
+  ajax.open("GET", "http://musicbrainz.org/ws/2/artist/?query=artist:" + search +"&fmt=json", true);
+  ajax.send();
+}
+
+function display(){
+  var json = JSON.parse(this.responseText);
+  var country = json.artists[0].area.name;
+
+  var city = json.artists[0]["begin-area"].name;
+  console.log(city + " " + country);
+
+  $("#location").html(city + ", " + country);
+
+  getCoordinates(city, country);
+}

@@ -21,18 +21,21 @@
 	<!-- Initiate app -->
 	<div ng-app="myApp" ng-controller="myCtrl">
 		<!-- Form -->
-		<form class="container" name="songForm">
+		<form id="search"class="container" name="songForm">
 			<div class="form-group">
 				<label>Spotify search:</label>
-				<input name="search" placeholder="Enter your search.." ng-model="track" class="form-control"></input>
+				<input id="input" name="search" placeholder="Enter your search.." ng-model="track" class="form-control"></input>
 			</div>
 			<div class="form-group">
 				<button ng-disabled="songForm.search.$invalid" class="btn btn-primary" ng-click="getSongs()" type="submit">Submit</button>
 			</div>
 		</form>
+		<div id="location">
+
+		</div>
 		
 		<!-- Results -->
-		<div class="container-fixed">
+		<div id="result" class="container-fixed">
 			<p ng-show="tracks.length>0" class="help-block">Click to sample</p>
 			<ul>
 				<li ng-repeat="track in tracks" class="" ng-click="play(track.preview_url)" title="{{track.name}}">{{track.name + ', by ' + track.artists[0].name}}</li>
