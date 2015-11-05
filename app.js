@@ -1,3 +1,9 @@
+var lastFmBase = "http://ws.audioscrobbler.com/2.0/"
+var googleMapBase = "https://maps.googleapis.com/maps/api/geocode/json"
+var musicBrainzBase = "http://musicbrainz.org/ws/2/artist/"
+var lastFmKey = "ef2f18ff332a62f72ad46c4820bdb11b"
+var googleKey = "AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs"
+
 var data;
 var baseUrl = 'https://api.spotify.com/v1/search?type=track&query='
 var myApp = angular.module('myApp', [])
@@ -32,44 +38,48 @@ $('body').tooltip({
 
 window.onload = function(){
   $('#search').submit(function(){
-        getLocation()
+    $("#location").html("");
+    var username = $("#input").val();
+    ajaxRequest('true', displayLast, lastFmBase + "?user="+ username + "&method=user.gettopartists&api_key=" + lastFmKey +"&format=json");
     });
-  lastFmTest();
+  
 }
 
-function lastFmTest(){
+function ajaxRequest(sync, destination, currentUrl){
   $.ajax({
-   url : "http://ws.audioscrobbler.com/2.0/?user=austinweale&method=user.gettopartists&api_key=ef2f18ff332a62f72ad46c4820bdb11b",
-   data : { param : "value" },
-   dataType : 'text',
-   type : 'get',
-   success : function(text) {
-   // called after the ajax has returned successful response
-   displayLast(text); // alerts the response
- }
-});
+    url : currentUrl,
+    data : { param : "value" },
+    dataType : 'text',
+    async: sync,
+    type : 'get',
+    success : function(text) {
+      // called after the ajax has returned successful response
+      destination(text); // alerts the response
+    }
+  });
 }
 
 function displayLast(text){
-  alert(text);
+  var json = JSON.parse(text);
+  var artists = json.topartists.artist;
+  for(var i = 0; i < 10; i++){
+    ajaxRequest('false', display, musicBrainzBase + "?query=artist:" + artists[i].name +"&fmt=json");
+
+  }
 }
 
 function getCoordinates(city, country){
-  /*console.log("https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs");
-  var ajax = new XMLHttpRequest();
-  ajax.onload = displayCoordinates();
-  ajax.open("GET", "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs", true);
-  ajax.send();*/
   $.ajax({
-   url : "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + ",+" + country + "&key=AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs",
-   data : { param : "value" },
-   dataType : 'text',
-   type : 'get',
-   success : function(text) {
-   // called after the ajax has returned successful response
-   displayCoordinates(text); // alerts the response
- }
-});
+    url : googleMapBase + "?address=" + city + ",+" + country + "&key=" + googleKey,
+    data : { param : "value" },
+    dataType : 'text',
+    type : 'get',
+    async: 'false',
+    success : function(text) {
+      // called after the ajax has returned successful response
+      displayCoordinates(text); // alerts the response
+    }
+  });
 }
 
 function displayCoordinates(text){
@@ -80,26 +90,17 @@ function displayCoordinates(text){
   var lng = json.results[0].geometry.location.lng;
   console.log(lat + " " + lng);
 
-  $("#location").append("<br>lattitude: " + lat + "<br>" + "longitude: " + lng);
+  $("#location").append("<br>lattitude: " + lat + "<br>" + "longitude: " + lng );
 }
 
-function getLocation(){
-  var search = $("#input").val();
-  console.log(search);
-  var ajax = new XMLHttpRequest();
-  ajax.onload = display;
-  ajax.open("GET", "http://musicbrainz.org/ws/2/artist/?query=artist:" + search +"&fmt=json", true);
-  ajax.send();
-}
-
-function display(){
-  var json = JSON.parse(this.responseText);
+function display(text){
+  var json = JSON.parse(text);
   var country = json.artists[0].area.name;
 
   var city = json.artists[0]["begin-area"].name;
   console.log(city + " " + country);
 
-  $("#location").html(city + ", " + country);
+  $("#location").append(city + ", " + country + "<br>");
 
   getCoordinates(city, country);
 }
