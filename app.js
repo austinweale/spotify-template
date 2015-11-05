@@ -34,6 +34,24 @@ window.onload = function(){
   $('#search').submit(function(){
         getLocation()
     });
+  lastFmTest();
+}
+
+function lastFmTest(){
+  $.ajax({
+   url : "http://ws.audioscrobbler.com/2.0/?user=austinweale&method=user.gettopartists&api_key=ef2f18ff332a62f72ad46c4820bdb11b",
+   data : { param : "value" },
+   dataType : 'text',
+   type : 'get',
+   success : function(text) {
+   // called after the ajax has returned successful response
+   displayLast(text); // alerts the response
+ }
+});
+}
+
+function displayLast(text){
+  alert(text);
 }
 
 function getCoordinates(city, country){
