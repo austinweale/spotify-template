@@ -1,41 +1,95 @@
-var lastFmBase = "http://ws.audioscrobbler.com/2.0/"
-var googleMapBase = "https://maps.googleapis.com/maps/api/geocode/json"
-var musicBrainzBase = "http://musicbrainz.org/ws/2/artist/"
-var lastFmKey = "ef2f18ff332a62f72ad46c4820bdb11b"
-var googleKey = "AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs"
+Parse.initialize("8LiZGBvExsCRqQIlwP8GB1q1yh7ShdmxIMYB882g", "FmLeLaAltBlxJSyFPy7sOHzyqQCxLrz2zA1l3Goy");
+var BandData = Parse.Object.extend('BandData');
+
+var lastFmBase = "http://ws.audioscrobbler.com/2.0/";
+var googleMapBase = "https://maps.googleapis.com/maps/api/geocode/json";
+var musicBrainzBase = "http://musicbrainz.org/ws/2/artist/";
+var lastFmKey = "ef2f18ff332a62f72ad46c4820bdb11b";
+var googleKey = "AIzaSyBIFJX-BioTGbdc5g80uSqKCM8EtUdyuqs";
 
 var data;
 var baseUrl = 'https://api.spotify.com/v1/search?type=track&query='
 var myApp = angular.module('myApp', [])
+var holder = new Array();
 
 var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
-  $scope.audioObject = {}
-  $scope.getSongs = function() {
-    $http.get(baseUrl + $scope.track).success(function(response){
-      data = $scope.tracks = response.tracks.items
+  
+  $scope.iterator = [];
+  $scope.bands = [];
+  $scope.locations = [];
+  
+  $scope.audioObject = {};
+
+  $scope.saveLocation = function(text, index){
+      var json = JSON.parse(text);
+      var artists = json.artists[0];
+      var address = "";
+      var currentBand = new BandData;
+      currentBand.set("band", $scope.bands[index]);
+      if(artists['begin-area'] == undefined || artists.area == undefined){
+        address = "unknown";
+      }else{
+        address = artists['begin-area'].name + ", " + artists.area.name;
+      }
+      currentBand.set("address", address);
+
       
+      currentBand.save();
+
+
+  };
+
+  $scope.ajaxRequest = function(sync, destination, currentUrl, index){
+
+    $.ajax({
+      url : currentUrl,
+      data : { param : "value" },
+      dataType : 'text',
+      async: sync,
+      type : 'get',
+      success : function(text) {
+        // called after the ajax has returned successful response
+        destination(text, index); // alerts the response
+      },
+      error : function(){
+        var currentBand = new BandData;
+        currentBand.set("band", $scope.bands[index]);
+        currentBand.set("address", "unknown");
+      }
+    });
+  }
+
+  var getLocations = function(){
+    
+    for(var j = 0; j < $scope.bands.length; j++){
+      //make it not call this if its in the database
+      $scope.ajaxRequest("false", $scope.saveLocation, musicBrainzBase + "?query=artist:" + $scope.bands[j] +"&fmt=json", j);
+        
+    }
+    console.log(holder);
+    
+  };
+
+  $scope.getArtists = function(){
+    $http.get(lastFmBase + "?user=" + $scope.user + "&method=user.gettopartists&api_key=ef2f18ff332a62f72ad46c4820bdb11b&format=json").success(function(response){
+      console.log(response);
+      var artists = response.topartists.artist;
+      for(var i = 0; i < 10; i++){
+        $scope.iterator[i] = i;
+        $scope.bands[i] = artists[i].name;
+        //ajaxRequest('false', display, musicBrainzBase + "?query=artist:" + artists[i].name +"&fmt=json");
+
+      }
+      getLocations();
     })
-  }
-  $scope.play = function(song) {
-    if($scope.currentSong == song) {
-      $scope.audioObject.pause()
-      $scope.currentSong = false
-      return
-    }
-    else {
-      if($scope.audioObject.pause != undefined) $scope.audioObject.pause()
-      $scope.audioObject = new Audio(song);
-      $scope.audioObject.play()  
-      $scope.currentSong = song
-    }
-  }
+  };
 })
 
 // Add tool tips to anything with a title property
 $('body').tooltip({
     selector: '[title]'
 });
-
+/*
 window.onload = function(){
   $('#search').submit(function(){
     $("#location").html("");
@@ -55,6 +109,9 @@ function ajaxRequest(sync, destination, currentUrl){
     success : function(text) {
       // called after the ajax has returned successful response
       destination(text); // alerts the response
+    },
+    error : function(){
+      alert("a band was not found");
     }
   });
 }
@@ -63,6 +120,7 @@ function displayLast(text){
   var json = JSON.parse(text);
   var artists = json.topartists.artist;
   for(var i = 0; i < 10; i++){
+    $scope.bands[i] = artists[i].name;
     ajaxRequest('false', display, musicBrainzBase + "?query=artist:" + artists[i].name +"&fmt=json");
 
   }
@@ -103,4 +161,4 @@ function display(text){
   $("#location").append(city + ", " + country + "<br>");
 
   getCoordinates(city, country);
-}
+}*/
