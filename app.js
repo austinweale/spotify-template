@@ -62,13 +62,41 @@ var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
   var getLocations = function(){
     
     for(var j = 0; j < $scope.bands.length; j++){
-      //make it not call this if its in the database
-      $scope.ajaxRequest("false", $scope.saveLocation, musicBrainzBase + "?query=artist:" + $scope.bands[j] +"&fmt=json", j);
-        
+      var query = new Parse.Query(BandData);
+      query.equalTo("band", $scope.bands[j]);
+
+      query.find({
+          success:function(results){
+            if(results.length == 0){
+
+              console.log(results[0]);
+              $scope.ajaxRequest("false", $scope.saveLocation, musicBrainzBase + "?query=artist:" + $scope.bands[j] +"&fmt=json", j);
+
+            }else{
+              console.log(results[0]);
+            }
+          },
+          error:function(error){
+            alert("An error occurred");
+
+          }
+      })
+              
     }
     console.log(holder);
     
   };
+
+  var loadLocations = function(){
+    for(var i = 0; i < $scope.bands.length; i++){
+      query.notEqualTo("band", "");
+      query.find({
+          success:function(results){
+              //console.log(results.band);
+          }
+      })
+    }
+  }
 
   $scope.getArtists = function(){
     $http.get(lastFmBase + "?user=" + $scope.user + "&method=user.gettopartists&api_key=ef2f18ff332a62f72ad46c4820bdb11b&format=json").success(function(response){
@@ -82,7 +110,9 @@ var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
       }
       getLocations();
     })
+    loadLocations();
   };
+
 })
 
 // Add tool tips to anything with a title property
