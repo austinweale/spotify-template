@@ -64,16 +64,18 @@ var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
     for(var j = 0; j < $scope.bands.length; j++){
       var query = new Parse.Query(BandData);
       query.equalTo("band", $scope.bands[j]);
+      var current = $scope.bands[j];
 
       query.find({
           success:function(results){
             if(results.length == 0){
-
-              console.log(results[0]);
-              $scope.ajaxRequest("false", $scope.saveLocation, musicBrainzBase + "?query=artist:" + $scope.bands[j] +"&fmt=json", j);
+              console.log(results[0].rank);
+              console.log(musicBrainzBase + "?query=artist:" + current +"&fmt=json");
+              
+              $scope.ajaxRequest("false", $scope.saveLocation, musicBrainzBase + "?query=artist:" + $scope.bands[j] +"&fmt=json", results[0].rank);
 
             }else{
-              console.log(results[0]);
+              
             }
           },
           error:function(error){
@@ -106,11 +108,18 @@ var myCtrl = myApp.controller('myCtrl', function($scope, $http) {
         $scope.iterator[i] = i;
         $scope.bands[i] = artists[i].name;
         //ajaxRequest('false', display, musicBrainzBase + "?query=artist:" + artists[i].name +"&fmt=json");
+        var currentBand = new BandData;
+        currentBand.set("band", artists[i].name);
+        
+        currentBand.set("address", "");
+        currentBand.set("rank", i)
 
+        
+        currentBand.save();
       }
-      getLocations();
+      //getLocations();
     })
-    loadLocations();
+    //loadLocations();
   };
 
 })
